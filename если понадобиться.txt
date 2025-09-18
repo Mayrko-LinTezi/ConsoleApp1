@@ -1,0 +1,36 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+namespace ConsoleApp1
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            string filePath = "sfustudent.txt";
+
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine("Файл не найден!");
+                return;
+            }
+
+            // Читаем все строки файла
+            string[] lines = File.ReadAllLines(filePath);
+
+            // Перебираем каждую строку
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                string[] parts = line.Split(',');
+
+                // Выводим номер и данные
+                Console.WriteLine($"{i + 1}. Имя: {parts[0]}, Тема: {parts[1]}, Дата: {parts[2]}, Оценка: {parts[3]}");
+            }
+        }
+    }
+}
