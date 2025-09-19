@@ -49,14 +49,33 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
-            string filePath = "sfustudent.txt";
-            List<Student> students = ParseStudentsFromFile(filePath); // читаем студентов в список
+            // читаем все объекты из файлов
+            var students = ParseStudentsFromFile("sfustudent.txt"); // студенты
+            var courses = ParseCoursesFromFile("courses.txt");      // курсы
+            var teachers = ParseTeachersFromFile("teachers.txt");   // преподаватели
 
-            for (int i = 0; i < students.Count; i++)
+            // выводим все объекты
+            PrintObjects("Студенты", students);
+            PrintLowGradeStudents(students); // вывод студентов с оценкой <=3
+            PrintObjects("Курсы", courses);
+            PrintObjects("Преподаватели", teachers);
+
+            Console.ReadLine(); // чтобы консоль не закрывалась
+        }
+
+        // не отдельная функция вывода списка объектови заголовокв
+        static void PrintObjects<T>(string header, List<T> objects)
+        {
+            Console.WriteLine($"\n{header}");
+            foreach (var obj in objects)
             {
-                Console.WriteLine($"{i + 1}. {students[i]}");
+                Console.WriteLine(obj);
             }
+        }
 
+        // отдельная функция для студентов с оценкой <=3
+        static void PrintLowGradeStudents(List<Student> students)
+        {
             List<string> printed = new List<string>(); // список уже напечатанных ФИО
             foreach (var student in students)
             {
@@ -66,22 +85,9 @@ namespace ConsoleApp1
                     printed.Add(student.FullName);
                 }
             }
-
-            Console.WriteLine("\nКурсы");
-            foreach (var c in ParseCoursesFromFile("courses.txt"))
-            {
-                Console.WriteLine(c);
-            }
-
-            Console.WriteLine("\nПреподаватели");
-            foreach (var t in ParseTeachersFromFile("teachers.txt"))
-            {
-                Console.WriteLine(t);
-            }
-
-            Console.ReadLine(); // чтобы консоль не закрывалась
         }
 
+        // парсинг студентов из файла
         static List<Student> ParseStudentsFromFile(string filePath)
         {
             List<Student> students = new List<Student>();  // список студентов
@@ -90,7 +96,6 @@ namespace ConsoleApp1
             foreach (string line in lines)
             {
                 List<string> parts = ParseLineWithQuotes(line); // разбиваем строку с учётом кавычек
-
                 if (parts.Count >= 4) // проверяем, что в строке есть все данные
                 {
                     students.Add(new Student
@@ -102,20 +107,19 @@ namespace ConsoleApp1
                     });
                 }
             }
-
             return students;
         }
 
+        // парсинг курсов из файла
         static List<Course> ParseCoursesFromFile(string filePath)
-        {//обработчик курсов
-            List<Course> courses = new List<Course>();
+        {
+            List<Course> courses = new List<Course>();  // список курсов
             string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
 
             foreach (string line in lines)
             {
                 List<string> parts = ParseLineWithQuotes(line);
-
-                if (parts.Count >= 3)
+                if (parts.Count >= 3) // проверка наличия данных
                 {
                     courses.Add(new Course
                     {
@@ -125,35 +129,34 @@ namespace ConsoleApp1
                     });
                 }
             }
-
             return courses;
         }
 
+        // парсинг преподавателей из файла
         static List<Teacher> ParseTeachersFromFile(string filePath)
-        {//обработчик преподавателей
-            List<Teacher> teachers = new List<Teacher>();
+        {
+            List<Teacher> teachers = new List<Teacher>();  // список преподавателей
             string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
 
             foreach (string line in lines)
             {
                 List<string> parts = ParseLineWithQuotes(line);
-
-                if (parts.Count >= 3)
+                if (parts.Count >= 3) // проверка наличия данных
                 {
                     teachers.Add(new Teacher
                     {
                         FullName = parts[0], // ФИО
                         Subject = parts[1],  // предмет
-                        HireDate = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture) // дата
+                        HireDate = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture) // дата приёма
                     });
                 }
             }
-
             return teachers;
         }
 
+        // разбиение строк с учётом кавычек
         static List<string> ParseLineWithQuotes(string line)
-        {// разбиение строк с кавычками
+        {
             List<string> parts = new List<string>();
             bool inQuotes = false;                           // флаг внутри кавычек да/нет
             StringBuilder currentPart = new StringBuilder(); // собираем слово по символам
