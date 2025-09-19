@@ -5,8 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Globalization;
-using System.Threading;
-using System.Data.Common;
 
 namespace ConsoleApp1
 {
@@ -25,9 +23,9 @@ namespace ConsoleApp1
 
     public class Course
     {
-        public string Name { get; set; }                // Название курса
-        public int Credits { get; set; }                // Количество кредитов вывод как целое число
-        public string Department { get; set; }          // Кафедра, которой принадлежит курс
+        public string Name { get; set; }
+        public int Credits { get; set; }
+        public string Department { get; set; }
 
         public override string ToString()
         {
@@ -37,9 +35,9 @@ namespace ConsoleApp1
 
     public class Teacher
     {
-        public string FullName { get; set; }            // ФИО преподавателя
-        public string Subject { get; set; }             // Предмет, который ведёт преподаватель
-        public DateTime HireDate { get; set; }          // Дата приёма на работу тип datetime
+        public string FullName { get; set; }
+        public string Subject { get; set; }
+        public DateTime HireDate { get; set; }
 
         public override string ToString()
         {
@@ -47,94 +45,143 @@ namespace ConsoleApp1
         }
     }
 
-    // var biologGrade = student.Grades.First(g => g.Subject == "Биология"); Console.WriteLine($"{student.Name}: Биология - {biologGrade.Score}");
     internal class Program
     {
         static void Main(string[] args)
         {
             string filePath = "sfustudent.txt";
-
-            List<Student> students = ParseStudentsFromFile(filePath);       //чтение файла и созд. список студов
+            List<Student> students = ParseStudentsFromFile(filePath); // читаем студентов в список
 
             for (int i = 0; i < students.Count; i++)
             {
                 Console.WriteLine($"{i + 1}. {students[i]}");
             }
-            List<string> studentsone = new List<string>();
 
+            List<string> printed = new List<string>(); // список уже напечатанных ФИО
             foreach (var student in students)
             {
-                if (student.Grade <= 3)
+                if (student.Grade <= 3 && !printed.Contains(student.FullName))
                 {
-                    if (!studentsone.Contains(student.FullName))
-                    {
-                        Console.WriteLine($"{student.FullName}: {student.Grade}");
-                        studentsone.Add(student.FullName);
-                    }
+                    Console.WriteLine($"{student.FullName}: {student.Grade}");
+                    printed.Add(student.FullName);
                 }
             }
-            Console.ReadLine();
+
+            Console.WriteLine("\nКурсы");
+            foreach (var c in ParseCoursesFromFile("courses.txt"))
+            {
+                Console.WriteLine(c);
+            }
+
+            Console.WriteLine("\nПреподаватели");
+            foreach (var t in ParseTeachersFromFile("teachers.txt"))
+            {
+                Console.WriteLine(t);
+            }
+
+            Console.ReadLine(); // чтобы консоль не закрывалась
         }
 
-        static List<Student> ParseStudentsFromFile(string filePath)     // возвращает список студентов
+        static List<Student> ParseStudentsFromFile(string filePath)
         {
-            List<Student> students = new List<Student>();          //список для студентов
-            string[] lines = File.ReadAllLines(filePath);        // read строк из файла в массив строк
+            List<Student> students = new List<Student>();  // список студентов
+            string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
 
-            for (int i = 0; i < lines.Length; i++)
+            foreach (string line in lines)
             {
-                string line = lines[i];
-                List<string> parts = ParseLineWithQuotes(line);     // разбивает строку на части, учитываем кавычки
+                List<string> parts = ParseLineWithQuotes(line); // разбиваем строку с учётом кавычек
 
-                if (parts.Count >= 4) // цикл обработчик 
+                if (parts.Count >= 4) // проверяем, что в строке есть все данные
                 {
-                    Student student = new Student  // создаем объект
+                    students.Add(new Student
                     {
-                        FullName = parts[0],
-                        Subject = parts[1],
-                        Date = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture),//CultureInfo.InvariantCulture отказ от настроек ПК
-                        Grade = int.Parse(parts[3])
-                    };
-
-                    students.Add(student);
+                        FullName = parts[0],   // имя студента
+                        Subject = parts[1],    // предмет
+                        Date = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture), // дата
+                        Grade = int.Parse(parts[3]) // оценка
+                    });
                 }
             }
 
             return students;
         }
-        //пер. для хран. тек. символ                          поддерж. опер. срав.
-        static List<string> ParseLineWithQuotes(string line)  // разбив на части
-        {
-            List<string> parts = new List<string>();
-            bool inQuotes = false;                            // находимся ли мы внутри кавычек да/нет
-            StringBuilder currentPart = new StringBuilder();  // образуем переменную, где собир. часть строки символ за символ. в самом цикле
 
-            for (int i = 0; i < line.Length; i++)               // это сам цикл 
+        static List<Course> ParseCoursesFromFile(string filePath)
+        {//обработчик курсов
+            List<Course> courses = new List<Course>();
+            string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
+
+            foreach (string line in lines)
             {
-                char currentChar = line[i];                     //+
+                List<string> parts = ParseLineWithQuotes(line);
 
+                if (parts.Count >= 3)
+                {
+                    courses.Add(new Course
+                    {
+                        Name = parts[0],              // название курса
+                        Credits = int.Parse(parts[1]),// кредиты
+                        Department = parts[2]         // кафедра
+                    });
+                }
+            }
+
+            return courses;
+        }
+
+        static List<Teacher> ParseTeachersFromFile(string filePath)
+        {//обработчик преподавателей
+            List<Teacher> teachers = new List<Teacher>();
+            string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
+
+            foreach (string line in lines)
+            {
+                List<string> parts = ParseLineWithQuotes(line);
+
+                if (parts.Count >= 3)
+                {
+                    teachers.Add(new Teacher
+                    {
+                        FullName = parts[0], // ФИО
+                        Subject = parts[1],  // предмет
+                        HireDate = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture) // дата
+                    });
+                }
+            }
+
+            return teachers;
+        }
+
+        static List<string> ParseLineWithQuotes(string line)
+        {// разбиение строк с кавычками
+            List<string> parts = new List<string>();
+            bool inQuotes = false;                           // флаг внутри кавычек да/нет
+            StringBuilder currentPart = new StringBuilder(); // собираем слово по символам
+
+            foreach (char currentChar in line)
+            {
                 if (currentChar == '"')
                 {
-                    inQuotes = !inQuotes;                        // переключение true или false. ! отрицание (не)
+                    inQuotes = !inQuotes; // переключаем флаг
                     continue;
                 }
 
-                if (currentChar == ' ' && !inQuotes)
+                if (currentChar == ' ' && !inQuotes) // пробел вне кавычек
                 {
-                    if (currentPart.Length > 0)                  // проверка на накопилось ли слово, дойдя до пробела сохран. плучившиеся слово
+                    if (currentPart.Length > 0)
                     {
-                        parts.Add(currentPart.ToString());      // добавляем получиашиеся слово в список parts
-                        currentPart.Clear();          // очищ. получ. слово и нач. новое слово
+                        parts.Add(currentPart.ToString()); // добавляем собранное слово
+                        currentPart.Clear(); // очищаем буфер
                     }
                     continue;
                 }
 
-                currentPart.Append(currentChar);     // если пробел вне кавычек, то добавляем к слову
+                currentPart.Append(currentChar); // добавляем символ к слову
             }
 
-            if (currentPart.Length > 0)             // цикл добав. словотолько тогда, когда встр пробел вне кавычек
+            if (currentPart.Length > 0)
             {
-                parts.Add(currentPart.ToString()); // если не пустой, то добавляется
+                parts.Add(currentPart.ToString()); // добавляем последнее слово
             }
 
             return parts;
