@@ -45,38 +45,44 @@ namespace ConsoleApp1
         }
     }
 
-    internal class Program
+    public class Program
     {
         static void Main(string[] args)
         {
-            // читаем все объекты из файлов
-            var students = ParseStudentsFromFile("sfustudent.txt"); // студенты
-            var courses = ParseCoursesFromFile("courses.txt");      // курсы
-            var teachers = ParseTeachersFromFile("teachers.txt");   // преподаватели
+            try
+            {
+                // читаем все объекты из файлов
+                var students = ParseStudentsFromFile("sfustudent.txt");                                                                                                  // студенты
+                var courses = ParseCoursesFromFile("courses.txt");                                                                                                       // курсы
+                var teachers = ParseTeachersFromFile("teachers.txt");                                                                                                    // преподаватели
 
-            // выводим все объекты
-            PrintObjects("Студенты", students);
-            PrintLowGradeStudents(students); // вывод студентов с оценкой <=3
-            PrintObjects("Курсы", courses);
-            PrintObjects("Преподаватели", teachers);
-
-            Console.ReadLine(); // чтобы консоль не закрывалась
+                // выводим все объекты
+                PrintObjects("Студенты", students);
+                LowGradeStudents(students);                                                                                                                             // вывод студентов с оценкой <=3
+                PrintObjects("Курсы", courses);
+                PrintObjects("Преподаватели", teachers);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка выполнения самой программы: " + ex.Message);
+            }
+            Console.ReadLine();                                                                                                                                   // чтобы консоль не закрывалась
         }
 
-        // не отдельная функция вывода списка объектови заголовокв
+                                                                                                                                                                    // не отдельная функция вывода списка объектови заголовокв
         static void PrintObjects<T>(string header, List<T> objects)
         {
             Console.WriteLine($"\n{header}");
-            foreach (var obj in objects)
+            foreach (var ob in objects)
             {
-                Console.WriteLine(obj);
+                Console.WriteLine(ob);
             }
         }
 
-        // отдельная функция для студентов с оценкой <=3
-        static void PrintLowGradeStudents(List<Student> students)
+                                                                                                                                                                    // отдельная функция для студентов с оценкой <=3
+        public static void LowGradeStudents(List<Student> students)
         {
-            List<string> printed = new List<string>(); // список уже напечатанных ФИО
+            List<string> printed = new List<string>();                                                                                                            // список уже напечатанных ФИО
             foreach (var student in students)
             {
                 if (student.Grade <= 3 && !printed.Contains(student.FullName))
@@ -88,23 +94,41 @@ namespace ConsoleApp1
         }
 
         // парсинг студентов из файла
-        static List<Student> ParseStudentsFromFile(string filePath)
+        public static List<Student> ParseStudentsFromFile(string filePath)
         {
-            List<Student> students = new List<Student>();  // список студентов
-            string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
+            List<Student> students = new List<Student>();
+
+            if (!File.Exists(filePath)) // проверка на существование файла
+            {
+                Console.WriteLine($"Файл {filePath} не найден!");
+                return students; // возвращаем пустой список
+            }
+
+            string[] lines = File.ReadAllLines(filePath); // читаем все строки файла
 
             foreach (string line in lines)
             {
-                List<string> parts = ParseLineWithQuotes(line); // разбиваем строку с учётом кавычек
-                if (parts.Count >= 4) // проверяем, что в строке есть все данные
+                try // оборачиваем каждую строку в try/catch
                 {
-                    students.Add(new Student
+                    List<string> parts = ParseLineWithQuotes(line); // разбиваем строку с учётом кавычек
+                    if (parts.Count >= 4) // проверяем, что в строке есть все данные
                     {
-                        FullName = parts[0],   // имя студента
-                        Subject = parts[1],    // предмет
-                        Date = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture), // дата
-                        Grade = int.Parse(parts[3]) // оценка
-                    });
+                        students.Add(new Student
+                        {
+                            FullName = parts[0], // имя студента
+                            Subject = parts[1],  // предмет
+                            Date = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture), // дата
+                            Grade = int.Parse(parts[3]) // оценка
+                        });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Строка пропущена (недостаточно данных): {line}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка обработки строки: {line}. {ex.Message}");
                 }
             }
             return students;
@@ -113,20 +137,38 @@ namespace ConsoleApp1
         // парсинг курсов из файла
         static List<Course> ParseCoursesFromFile(string filePath)
         {
-            List<Course> courses = new List<Course>();  // список курсов
-            string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
+            List<Course> courses = new List<Course>();
+
+            if (!File.Exists(filePath)) // проверка на файл
+            {
+                Console.WriteLine($"Файл {filePath} не найден!");
+                return courses;
+            }
+
+            string[] lines = File.ReadAllLines(filePath);
 
             foreach (string line in lines)
             {
-                List<string> parts = ParseLineWithQuotes(line);
-                if (parts.Count >= 3) // проверка наличия данных
+                try
                 {
-                    courses.Add(new Course
+                    List<string> parts = ParseLineWithQuotes(line);
+                    if (parts.Count >= 3)
                     {
-                        Name = parts[0],              // название курса
-                        Credits = int.Parse(parts[1]),// кредиты
-                        Department = parts[2]         // кафедра
-                    });
+                        courses.Add(new Course
+                        {
+                            Name = parts[0],                  // название курса
+                            Credits = int.Parse(parts[1]),    // кредиты
+                            Department = parts[2]             // кафедра
+                        });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Строка пропущена (недостаточно данных): {line}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка обработки строки: {line}. {ex.Message}");
                 }
             }
             return courses;
@@ -135,56 +177,74 @@ namespace ConsoleApp1
         // парсинг преподавателей из файла
         static List<Teacher> ParseTeachersFromFile(string filePath)
         {
-            List<Teacher> teachers = new List<Teacher>();  // список преподавателей
-            string[] lines = File.ReadAllLines(filePath);  // читаем все строки файла
+            List<Teacher> teachers = new List<Teacher>();
+
+            if (!File.Exists(filePath)) // проверка файла
+            {
+                Console.WriteLine($"Файл {filePath} не найден!");
+                return teachers;
+            }
+
+            string[] lines = File.ReadAllLines(filePath);
 
             foreach (string line in lines)
             {
-                List<string> parts = ParseLineWithQuotes(line);
-                if (parts.Count >= 3) // проверка наличия данных
+                try
                 {
-                    teachers.Add(new Teacher
+                    List<string> parts = ParseLineWithQuotes(line);
+                    if (parts.Count >= 3)
                     {
-                        FullName = parts[0], // ФИО
-                        Subject = parts[1],  // предмет
-                        HireDate = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture) // дата приёма
-                    });
+                        teachers.Add(new Teacher
+                        {
+                            FullName = parts[0], // ФИО
+                            Subject = parts[1],  // предмет
+                            HireDate = DateTime.ParseExact(parts[2], "yyyy.MM.dd", CultureInfo.InvariantCulture) // дата приёма
+                        });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Строка пропущена (недостаточно данных): {line}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка обработки строки: {line}. {ex.Message}");
                 }
             }
             return teachers;
         }
 
         // разбиение строк с учётом кавычек
-        static List<string> ParseLineWithQuotes(string line)
+        public static List<string> ParseLineWithQuotes(string line)
         {
             List<string> parts = new List<string>();
-            bool inQuotes = false;                           // флаг внутри кавычек да/нет
-            StringBuilder currentPart = new StringBuilder(); // собираем слово по символам
+            bool inQuotes = false;                                                                                                                                        // флаг внутри кавычек да/нет
+            StringBuilder currentPart = new StringBuilder();                                                                                                             // собираем слово по символам
 
             foreach (char currentChar in line)
             {
                 if (currentChar == '"')
                 {
-                    inQuotes = !inQuotes; // переключаем флаг
+                    inQuotes = !inQuotes;                                                                                                                                 // переключаем флаг
                     continue;
                 }
 
-                if (currentChar == ' ' && !inQuotes) // пробел вне кавычек
+                if (currentChar == ' ' && !inQuotes)                                                                                                                      // пробел вне кавычек
                 {
                     if (currentPart.Length > 0)
                     {
-                        parts.Add(currentPart.ToString()); // добавляем собранное слово
-                        currentPart.Clear(); // очищаем буфер
+                        parts.Add(currentPart.ToString());                                                                                                               // добавляем собранное слово
+                        currentPart.Clear();                                                                                                                             // очищаем буфер
                     }
                     continue;
                 }
 
-                currentPart.Append(currentChar); // добавляем символ к слову
+                currentPart.Append(currentChar);                                                                                                                           // добавляем символ к слову
             }
 
             if (currentPart.Length > 0)
             {
-                parts.Add(currentPart.ToString()); // добавляем последнее слово
+                parts.Add(currentPart.ToString());                                                                                                               // добавляем последнее слово
             }
 
             return parts;
