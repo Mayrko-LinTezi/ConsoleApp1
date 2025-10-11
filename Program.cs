@@ -108,7 +108,7 @@ namespace ConsoleApp1
 
             foreach (string line in lines)
             {
-                try // оборачиваем каждую строку в try/catch
+                try
                 {
                     List<string> parts = ParseLineWithQuotes(line); // разбиваем строку с учётом кавычек
                     if (parts.Count >= 4) // проверяем, что в строке есть все данные
@@ -135,7 +135,7 @@ namespace ConsoleApp1
         }
 
         // парсинг курсов из файла
-        static List<Course> ParseCoursesFromFile(string filePath)
+        public static List<Course> ParseCoursesFromFile(string filePath)
         {
             List<Course> courses = new List<Course>();
 
@@ -175,7 +175,7 @@ namespace ConsoleApp1
         }
 
         // парсинг преподавателей из файла
-        static List<Teacher> ParseTeachersFromFile(string filePath)
+        public static List<Teacher> ParseTeachersFromFile(string filePath)
         {
             List<Teacher> teachers = new List<Teacher>();
 
